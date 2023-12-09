@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrance</title>
+</head>
+<body>
+    <h1>Entrance</h1>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.email.label_tag }}
+        {{ form.email }}
+        <br>
+        {{ form.password.label_tag }}
+        {{ form.password }}
+        <br>
+        <input type="submit" value="Enter">
+    </form>
+    <p>Haven't been registered? <a href="{% url 'register' %}">Register</a></p>
+</body>
+</html>

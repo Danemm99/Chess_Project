@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+</head>
+<body>
+    <h2>Welcome!</h2>
+    {% if request.session.user_id %}
+        <p>You have been registered as {{ user.first_name }} {{ user.last_name }}.</p>
+        <p>Your role: {{ user.role }}</p>
+        <a href="{% url 'logout' %}"><button>Log out</button></a>
+    {% else %}
+        <p>You are not registered. <a href="{% url 'login' %}"><button>Enter</button></a></p>
+    {% endif %}
+</body>
+</html>
