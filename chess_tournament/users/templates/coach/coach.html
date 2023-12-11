@@ -11,7 +11,7 @@
         <p>Your role: {{ user.role }}</p>
         <a href="{% url 'logout' %}"><button>Log out</button></a>
     {% else %}
-        <p>You are not registered. <a href="{% url 'login' %}"><button>Enter</button></a></p>
+        <p>You are not registered. <a href="{% url 'login' %}"><button>Login</button></a></p>
     {% endif %}
 </body>
 </html>
