@@ -3,6 +3,7 @@ from django.views import View
 from .forms import RegistrationForm, LoginForm
 from .models import CustomUser
 from django.contrib.auth.hashers import check_password
+from django.contrib.auth import login, logout
 
 
 class RegisterView(View):
@@ -24,7 +25,7 @@ class LoginView(View):
     template_name = 'login/login.html'
 
     def get(self, request):
-        if CustomUser.objects.filter(is_active=True).exists():
+        if request.user.is_authenticated:
             return redirect('home')
         form = LoginForm()
         return render(request, self.template_name, {'form': form})
@@ -35,42 +36,36 @@ class LoginView(View):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             user = CustomUser.get_by_email(email)
-            if user and check_password(password, user.password):
-                request.session['user_id'] = user.user_id
-                CustomUser.objects.filter(user_id=user.user_id).update(is_active=True)
+
+            if user and check_password(password, user.password) and (user.role == 'participant' or
+                                                                     user.role == 'coach'):
+                login(request, user)
                 return redirect('home')
             else:
                 return render(request, self.template_name, {'form': form, 'error': 'Invalid email or password.'})
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, {'form': form, 'error': 'Invalid email or password.'})
 
 
 class LogoutView(View):
     @staticmethod
     def get(request):
-        if 'user_id' in request.session:
-            user_id = request.session.get('user_id')
-            CustomUser.objects.filter(user_id=user_id).update(is_active=False)
-            del request.session['user_id']
+        if request.user.is_authenticated:
+            logout(request)
         return redirect('main')
 
 
 class HomeView(View):
     template_name_participant = 'participant/participant.html'
     template_name_coach = 'coach/coach.html'
+    template_name = 'user/user.html'
 
     def get(self, request):
-        user_id = request.session.get('user_id')
-        role = CustomUser.get_by_id(user_id).role
-        context = {}
+        user = request.user
+        context = {'user': user, 'permission_create_tournament': user.has_perm('tournaments.create_tournament'),
+                   'permission_add_location': user.has_perm('locations.add_location')}
 
-        if user_id:
-            user = CustomUser.get_by_id(user_id)
-            context['user'] = user
+        return render(request, self.template_name, context)
 
-        if user_id and role == 'participant':
-            return render(request, self.template_name_participant, context)
-        else:
-            return render(request, self.template_name_coach, context)
 
 
 class MainView(View):

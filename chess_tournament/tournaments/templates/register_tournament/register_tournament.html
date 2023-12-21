@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration for the tournament</title>
+</head>
+<body>
+    <h2>Registration for the tournament</h2>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <p>Are you sure you want to register for the tournament "{{ tournament.name }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <input type="submit" value="Register">
+    </form>
+    <a href="{% url 'tournament' tournament.tournament_id %}"><button>Cancel</button></a>
+</body>
+</html>

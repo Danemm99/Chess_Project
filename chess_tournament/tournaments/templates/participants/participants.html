@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All participants</title>
+</head>
+<body>
+    <h2>All participants</h2>
+    {% if set_participants %}
+        {% for el in set_participants %}
+            {% for participant in el%}
+                <h4>{{ forloop.parentloop.counter0|add:forloop.counter }}. Participant</h4>
+                <p>Username: {{ participant.username }}</p>
+                <p>First name: {{ participant.first_name }}</p>
+                <p>Last name: {{ participant.last_name }}</p>
+                <p>Email: {{ participant.email }}</p>
+                <p>Phone number: {{ participant.phone_number }}</p>
+            {% endfor %}
+        {% endfor %}
+    {% else %}
+        <p>There are no participants.</p>
+    {% endif %}
+</body>
+</html>

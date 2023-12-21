@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='comment',
-            name='tournament',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='tournaments.tournament'),
+            name='tournament_form',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='tournaments.tournament_form'),
         ),
     ]

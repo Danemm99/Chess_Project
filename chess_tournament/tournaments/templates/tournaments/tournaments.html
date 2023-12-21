@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All tournaments</title>
+</head>
+<body>
+    <h2>All tournaments</h2>
+    {% for tournament in tournaments %}
+        <p><a href="{% url 'tournament' tournament.tournament_id %}">{{ tournament.name }}</a></p>
+    {% empty %}
+        <p>There is no tournaments.</p>
+    {% endfor %}
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Information about tournament</title>
+</head>
+<body>
+    <h2>Information about tournament</h2>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <p>Prizes: {{ tournament.prizes }}</p>
+    <p>Date: {{ tournament.date }}</p>
+    <p>Registration deadline: {{ tournament.registration_deadline }}</p>
+
+    {% if location.name is not None %}
+        <p>Name of location: {{ location.name }}</p>
+        <p>City: {{ location.city }}</p>
+        <p>Address: {{ location.address }}</p>
+    {% else %}
+        <p>Location: Online</p>
+    {% endif %}
+
+    {% if can_read_participants %}
+        <a href="{% url 'participants-tournament' tournament.tournament_id %}"><button>Participants</button></a>
+    {% endif %}
+
+    {% if can_participate and not time_over %}
+        <a href="{% url 'register-tournament' tournament.tournament_id %}"><button>Register for the tournament</button></a>
+    {% endif %}
+
+    {% if edit_delete_permission %}
+        <a href="{% url 'edit-tournament' tournament.tournament_id %}"><button>Edit tournament</button></a>
+        <a href="{% url 'delete-tournament' tournament.tournament_id %}"><button>Delete tournament</button></a>
+    {% endif %}
+</body>
+</html>

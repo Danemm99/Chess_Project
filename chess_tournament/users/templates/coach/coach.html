@@ -6,12 +6,13 @@
 </head>
 <body>
     <h2>Welcome!</h2>
-    {% if request.session.user_id %}
+    {% if request.user %}
         <p>You have been registered as {{ user.first_name }} {{ user.last_name }}.</p>
         <p>Your role: {{ user.role }}</p>
+        <a href="{% url 'location-adding' %}"><button>Add a location</button></a>
+        <a href="{% url 'tournament-creation' %}"><button>Create a tournament</button></a>
+        <a href="{% url 'tournaments' %}"><button>Information about all tournaments</button></a>
         <a href="{% url 'logout' %}"><button>Log out</button></a>
-    {% else %}
-        <p>You are not registered. <a href="{% url 'login' %}"><button>Login</button></a></p>
     {% endif %}
 </body>
 </html>
