@@ -4,7 +4,7 @@ from .models import Tournament
 from locations.models import Location
 
 
-class TournamentForm(forms.ModelForm):
+class BaseTournamentForm(forms.ModelForm):
 
     class Meta:
         model = Tournament
@@ -20,25 +20,31 @@ class TournamentForm(forms.ModelForm):
             'organizer': forms.HiddenInput(),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        default_location = Location.objects.get(name=None)
-        self.fields['location'].initial = default_location
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     default_location = Location.objects.get_or_create(name=None)
+    #     self.fields['location'].initial = default_location
 
-    def clean(self):
-        cleaned_data = super().clean()
-        date_value = cleaned_data.get('date')
-        registration_deadline_value = cleaned_data.get('registration_deadline')
+    def clean_date(self):
+        date_value = self.cleaned_data.get('date')
+        registration_deadline_value = self.cleaned_data.get('registration_deadline')
 
-        if date_value <= registration_deadline_value:
+        if date_value and registration_deadline_value and date_value <= registration_deadline_value:
             raise ValidationError('The tournament date must be later than the registration deadline.')
 
-        return cleaned_data
+        return date_value
+
+
+class TournamentForm(BaseTournamentForm):
 
     def clean_name(self):
         name = self.cleaned_data.get('name')
 
-        if Tournament.objects.filter(name=name).exists():
+        if name and Tournament.objects.filter(name=name).exists():
             raise ValidationError('The tournament with this name already exists.')
 
         return name
+
+
+class TournamentEditForm(BaseTournamentForm):
+    pass

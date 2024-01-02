@@ -67,6 +67,24 @@ class HomeView(View):
         return render(request, self.template_name, context)
 
 
+# class HomeView(View):
+#     template_name_participant = 'participant/participant.html'
+#     template_name_coach = 'coach/coach.html'
+#
+#     def get(self, request):
+#         user_id = request.session.get('user_id')
+#         role = request.user.role
+#         context = {}
+#
+#         if user_id:
+#             user = CustomUser.get_by_id(user_id)
+#             context['user'] = user
+#
+#         if user_id and role == 'participant':
+#             return render(request, self.template_name_participant, context)
+#         else:
+#             return render(request, self.template_name_coach, context)
+
 
 class MainView(View):
     template_name = 'main/main.html'
