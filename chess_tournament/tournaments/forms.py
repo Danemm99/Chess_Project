@@ -20,11 +20,6 @@ class BaseTournamentForm(forms.ModelForm):
             'organizer': forms.HiddenInput(),
         }
 
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     default_location = Location.objects.get_or_create(name=None)
-    #     self.fields['location'].initial = default_location
-
     def clean_date(self):
         date_value = self.cleaned_data.get('date')
         registration_deadline_value = self.cleaned_data.get('registration_deadline')
