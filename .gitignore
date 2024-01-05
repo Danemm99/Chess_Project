@@ -176,4 +176,4 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 chess_project/
-chess_tournament/.pytest_cache/
+*pytest_cache/

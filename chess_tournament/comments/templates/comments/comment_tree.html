@@ -1,0 +1,27 @@
+<!-- comments/comment_tree.html -->
+
+{% if comments %}
+    <ul>
+        {% for comment in comments %}
+            <li>
+                {% if user.user_id == comment.user_id %}
+                    <p>
+                        <a href="/home/"><strong>{{ comment.user.username }}</strong></a> said on {{ comment.timestamp|date:"F j, Y H:i" }}:
+                    </p>
+                {% else %}
+                    <p>
+                        <a href="{% url 'chess-player' comment.user_id %}"><strong>{{ comment.user.username }}</strong></a> said on {{ comment.timestamp|date:"F j, Y H:i" }}:
+                    </p>
+                {% endif %}
+                {{ comment.content }}
+                <a href="{% url 'reply_comment' tournament.tournament_id comment.comment_id %}">Reply</a>
+                {% if comment.comment_set.all %}
+                    {% with replies=comment.comment_set.all %}
+                        {% include 'comments/comment_tree.html' with comments=replies %}
+                    {% endwith %}
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+

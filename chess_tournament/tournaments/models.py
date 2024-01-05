@@ -27,3 +27,6 @@ class Comment(models.Model):
     parent_comment = models.ForeignKey('self', null=True, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def get_replies(self):
+        return Comment.objects.filter(parent_comment=self)

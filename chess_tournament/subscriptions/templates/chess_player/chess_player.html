@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Information about tournament</title>
+    <title>Information about chess player</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -57,37 +57,18 @@
 </head>
 <body>
     <div class="content">
-        <h2>Information about tournament</h2>
+        <h2>Information about chess player</h2>
         {% if error %}
             <p class="error-message">{{ error }}</p>
         {% endif %}
-        <p>Prizes: {{ tournament.prizes }}</p>
-        <p>Date: {{ tournament.date }}</p>
-        <p>Registration deadline: {{ tournament.registration_deadline }}</p>
-
-        {% if location.name is not None %}
-            <p>Name of location: {{ location.name }}</p>
-            <p>City: {{ location.city }}</p>
-            <p>Address: {{ location.address }}</p>
+        <p>First Name: {{ chess_player.first_name }}</p>
+        <p>Last Name: {{ chess_player.last_name }}</p>
+        <p>Email: {{ chess_player.email }}</p>
+        {% if can_unfollow %}
+            <a href="{% url 'unfollow' chess_player.user_id %}"><button>Unfollow the chess player</button></a>
         {% else %}
-            <p>Location: Online</p>
+            <a href="{% url 'follow' chess_player.user_id %}"><button>Follow the chess player</button></a>
         {% endif %}
-
-        {% if can_read_participants %}
-            <a href="{% url 'participants-tournament' tournament.tournament_id %}"><button>Participants</button></a>
-        {% endif %}
-
-        {% if can_participate and not time_over %}
-            <a href="{% url 'register-tournament' tournament.tournament_id %}"><button>Sign up for the tournament</button></a>
-        {% endif %}
-
-        {% if edit_delete_permission %}
-            <a href="{% url 'edit-tournament' tournament.tournament_id %}"><button>Edit tournament</button></a>
-            <a href="{% url 'delete-tournament' tournament.tournament_id %}"><button>Delete tournament</button></a>
-        {% endif %}
-        <a href="{% url 'tournament_comments' tournament.tournament_id %}"><button>Comment</button></a>
     </div>
 </body>
 </html>
-
-
