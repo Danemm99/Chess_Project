@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All tournaments</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #343a40;
+            text-align: center;
+        }
+
+        p {
+            color: #6c757d;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: #0056b3;
+        }
+
+        .no-tournaments {
+            color: #dc3545;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h2>All tournaments</h2>
+        {% for tournament in tournaments %}
+            <p><a href="{% url 'tournament' tournament.tournament_id %}">{{ tournament.name }}</a></p>
+        {% empty %}
+            <p class="no-tournaments">There are no tournaments.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
+

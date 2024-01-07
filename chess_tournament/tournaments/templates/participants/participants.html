@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All participants</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #343a40;
+            text-align: center;
+        }
+
+        h4 {
+            color: #007bff;
+        }
+
+        p {
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .no-participants {
+            color: #dc3545;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h2>All participants</h2>
+        {% if set_participants %}
+            {% for el in set_participants %}
+                {% for participant in el %}
+                    <h4>{{ forloop.parentloop.counter0|add:forloop.counter }}. Participant</h4>
+                    <p>Username: {{ participant.username }}</p>
+                    <p>First name: {{ participant.first_name }}</p>
+                    <p>Last name: {{ participant.last_name }}</p>
+                    <p>Email: {{ participant.email }}</p>
+                    <p>Phone number: {{ participant.phone_number }}</p>
+                {% endfor %}
+            {% endfor %}
+        {% else %}
+            <p class="no-participants">There are no participants.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
+

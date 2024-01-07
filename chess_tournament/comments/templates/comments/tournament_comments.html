@@ -1,0 +1,29 @@
+<!-- tournament_comments.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Comments</title>
+</head>
+<body>
+
+<h1>{{ tournament.name }} Comments</h1>
+
+{% block comment_tree %}
+    {% with comments as root_comments %}
+        {% include 'comments/comment_tree.html' %}
+    {% endwith %}
+{% endblock %}
+
+<!-- Form to add a new comment -->
+<form method="post" action="{% url 'tournament_comments' tournament.tournament_id %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add Comment</button>
+</form>
+
+</body>
+</html>
+

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Information about tournament</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h2 {
+            color: #343a40;
+            text-align: center;
+        }
+
+        p {
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .content {
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h2>Information about tournament</h2>
+        {% if error %}
+            <p class="error-message">{{ error }}</p>
+        {% endif %}
+        <p>Prizes: {{ tournament.prizes }}</p>
+        <p>Date: {{ tournament.date }}</p>
+        <p>Registration deadline: {{ tournament.registration_deadline }}</p>
+
+        {% if location.name is not None %}
+            <p>Name of location: {{ location.name }}</p>
+            <p>City: {{ location.city }}</p>
+            <p>Address: {{ location.address }}</p>
+        {% else %}
+            <p>Location: Online</p>
+        {% endif %}
+
+        {% if can_read_participants %}
+            <a href="{% url 'participants-tournament' tournament.tournament_id %}"><button>Participants</button></a>
+        {% endif %}
+
+        {% if can_participate and not time_over %}
+            <a href="{% url 'register-tournament' tournament.tournament_id %}"><button>Sign up for the tournament</button></a>
+        {% endif %}
+
+        {% if edit_delete_permission %}
+            <a href="{% url 'edit-tournament' tournament.tournament_id %}"><button>Edit tournament</button></a>
+            <a href="{% url 'delete-tournament' tournament.tournament_id %}"><button>Delete tournament</button></a>
+        {% endif %}
+        <a href="{% url 'tournament_comments' tournament.tournament_id %}"><button>Comment</button></a>
+    </div>
+</body>
+</html>
+
+

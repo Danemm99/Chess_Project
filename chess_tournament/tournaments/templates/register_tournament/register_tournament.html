@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration for the tournament</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h2 {
+            color: #343a40;
+            text-align: center;
+        }
+
+        p {
+            color: #6c757d;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            text-align: center;
+        }
+
+        input[type="submit"],
+        button {
+            display: block;
+            width: 50%; /* Adjusted width for smaller buttons */
+            margin: 0 auto; /* Center the buttons */
+            margin-bottom: 10px;
+            padding: 10px 15px; /* Adjusted padding for smaller buttons */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"] {
+            background-color: #28a745;
+            color: white;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h2>Sign up for the tournament</h2>
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+        {% endif %}
+        <p>Are you sure you want to sign up for the tournament "{{ tournament.name }}"?</p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="submit" value="Sign up">
+        </form>
+        <a href="{% url 'tournament' tournament.tournament_id %}"><button>Cancel</button></a>
+    </div>
+</body>
+</html>

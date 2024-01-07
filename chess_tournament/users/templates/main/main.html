@@ -2,13 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #343a40;
+            text-align: center;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px; /* Adjust margin as needed */
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
 </head>
 <body>
-<h1>
-    Welcome on main page!
-</h1>
-<a href="login"><button>Enter</button></a>
-<a href="register"><button>Register</button></a>
+    <div>
+        <h1>Welcome on the main page!</h1>
+        <div class="button-container">
+            <a href="login"><button>Log in</button></a>
+            <a href="register"><button>Sign up</button></a>
+        </div>
+    </div>
 </body>
 </html>
+
