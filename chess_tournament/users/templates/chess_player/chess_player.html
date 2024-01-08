@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Information about chess player</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h2 {
+            color: #343a40;
+            text-align: center;
+        }
+
+        p {
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .content {
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h2>Information about chess player</h2>
+        {% if error %}
+            <p class="error-message">{{ error }}</p>
+        {% endif %}
+        <p>First Name: {{ chess_player.first_name }}</p>
+        <p>Last Name: {{ chess_player.last_name }}</p>
+        <p>Email: {{ chess_player.email }}</p>
+        {% if can_unfollow %}
+            <a href="{% url 'unfollow' chess_player.user_id %}"><button>Unfollow the chess player</button></a>
+        {% else %}
+            <a href="{% url 'follow' chess_player.user_id %}"><button>Follow the chess player</button></a>
+        {% endif %}
+    </div>
+</body>
+</html>
