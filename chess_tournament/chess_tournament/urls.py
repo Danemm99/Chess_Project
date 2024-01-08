@@ -22,6 +22,4 @@ urlpatterns = [
     path('home/', include('tournaments.urls')),
     path('', include('users.urls')),
     path('', include('locations.urls')),
-    path('home/', include('subscriptions.urls')),
-    path('home/', include('comments.urls')),
 ]
