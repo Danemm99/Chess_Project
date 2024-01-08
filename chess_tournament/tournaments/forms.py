@@ -1,7 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import Tournament
-from locations.models import Location
 
 
 class BaseTournamentForm(forms.ModelForm):
@@ -43,3 +42,8 @@ class TournamentForm(BaseTournamentForm):
 
 class TournamentEditForm(BaseTournamentForm):
     pass
+
+
+class CommentForm(forms.Form):
+    content = forms.CharField(widget=forms.Textarea(attrs={'rows': 4, 'cols': 50}), required=True)
+    parent_comment_id = forms.IntegerField(widget=forms.HiddenInput(), required=False)
