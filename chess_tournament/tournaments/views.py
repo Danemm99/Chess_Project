@@ -12,7 +12,10 @@ from locations.views import PermissionMixin
 class PermissionTournamentMixin:
     @staticmethod
     def check_tournament_permission(request, tournament_id):
-        if not request.user.has_perm(f'tournaments.edit_delete_tournaments_{tournament_id}'):
+        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        organizer_user = CustomUser.objects.get(user_id=tournament.organizer_id)
+
+        if not request.user.user_id == organizer_user.user_id:
             raise PermissionDenied
 
 
@@ -28,7 +31,7 @@ class TournamentFormView(PermissionMixin, View):
     def post(self, request):
         self.check_coach_permission(request)
 
-        form = TournamentForm(request.POST)
+        form = TournamentForm(request.POST, request.FILES)
         if form.is_valid():
             form.instance.organizer = request.user
             form.save()
@@ -51,6 +54,7 @@ class TournamentView(View):
     def get(self, request, tournament_id):
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
         location = get_object_or_404(Location, location_id=tournament.location_id)
+        organizer_user = CustomUser.objects.get(user_id=tournament.organizer_id)
         user = request.user
         today = datetime.now().date()
 
@@ -58,8 +62,7 @@ class TournamentView(View):
             'tournament': tournament,
             'location': location,
             'user': user,
-            'edit_delete_permission': user.is_authenticated and
-                                      user.has_perm(f'tournaments.edit_delete_tournaments_{tournament_id}'),
+            'edit_delete_permission': user.is_authenticated and user.user_id == organizer_user.user_id,
             'time_over': tournament.registration_deadline < today,
             'can_read_participants': user.groups.filter(name='Coaches').exists(),
             'can_participate': user.groups.filter(name='Participants').exists()
@@ -83,7 +86,7 @@ class TournamentEditView(PermissionTournamentMixin, View):
         self.check_tournament_permission(request, tournament_id)
 
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
-        form = TournamentEditForm(request.POST, instance=tournament)
+        form = TournamentEditForm(request.POST, request.FILES, instance=tournament)
 
         if form.is_valid():
             form.save()
@@ -137,7 +140,6 @@ class TournamentRegisterView(PermissionMixin, View):
 
         return render(request, self.template_name, {'tournament': tournament})
 
-    # @method_decorator(permission_required('tournaments.can_participate', raise_exception=True))
     def post(self, request, tournament_id):
         self.check_participant_permission(request)
 
@@ -196,7 +198,7 @@ class TournamentCommentsView(View):
 
             Comment.objects.create(user=user, tournament=tournament, content=content, parent_comment=parent_comment)
 
-        return redirect('tournament_comments', tournament_id)
+        return redirect('tournament-comments', tournament_id)
 
 
 class ReplyCommentView(View):
@@ -226,5 +228,5 @@ class ReplyCommentView(View):
 
             Comment.objects.create(user=user, tournament=tournament, content=content, parent_comment=parent_comment)
 
-        return redirect('tournament_comments', tournament_id)
+        return redirect('tournament-comments', tournament_id)
 

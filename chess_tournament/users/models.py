@@ -23,7 +23,8 @@ class CustomUser(AbstractUser):
     user_id = models.AutoField(primary_key=True)
     role = models.CharField(max_length=20)
     phone_number = models.CharField(max_length=15)
-    profile_image = models.BinaryField(null=True)
+    profile_image = models.ImageField(upload_to='images_users/%Y/%m/%d/', default=None, blank=True, null=True)
+    email = models.EmailField(unique=True)
 
     objects = CustomUserManager()
 
@@ -45,9 +46,14 @@ class CustomUser(AbstractUser):
     def is_coach(self):
         return self.role == 'coach'
 
+    def __str__(self):
+        return f'{self.username}'
+
 
 class Subscription(models.Model):
     subscription_id = models.AutoField(primary_key=True)
     follower = models.ForeignKey(CustomUser, related_name='follower_id', on_delete=models.CASCADE)
     target_user = models.ForeignKey(CustomUser, related_name='target_user_id', on_delete=models.CASCADE)
-    unique_subscription = models.UniqueConstraint(fields=['follower', 'target_user'], name='unique_subscription')
+
+    class Meta:
+        unique_together = ['follower', 'target_user']

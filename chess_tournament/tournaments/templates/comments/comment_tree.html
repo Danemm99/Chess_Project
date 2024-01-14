@@ -12,7 +12,7 @@
                     </p>
                 {% endif %}
                 {{ comment.content }}
-                <a href="{% url 'reply_comment' tournament.tournament_id comment.comment_id %}">Reply</a>
+                <a href="{% url 'reply-comment' tournament.tournament_id comment.comment_id %}">Reply</a>
                 {% if comment.comment_set.all %}
                     {% with replies=comment.comment_set.all %}
                         {% include 'comments/comment_tree.html' with comments=replies %}

@@ -4,10 +4,13 @@ from .models import Tournament
 
 
 class BaseTournamentForm(forms.ModelForm):
+    date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}), input_formats=['%Y-%m-%d'])
+    registration_deadline = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}), input_formats=['%Y-%m-%d'])
+    tournament_image = forms.FileField(required=False, label='File')
 
     class Meta:
         model = Tournament
-        fields = ['name', 'location', 'prizes', 'date', 'registration_deadline']
+        fields = ['tournament_image', 'name', 'location', 'prizes', 'date', 'registration_deadline']
         labels = {
             'name': 'Name of the tournament',
             'location': 'Location',
@@ -19,14 +22,15 @@ class BaseTournamentForm(forms.ModelForm):
             'organizer': forms.HiddenInput(),
         }
 
-    def clean_date(self):
-        date_value = self.cleaned_data.get('date')
-        registration_deadline_value = self.cleaned_data.get('registration_deadline')
+    def clean(self):
+        cleaned_data = super().clean()
+        date_value = cleaned_data.get('date')
+        registration_deadline_value = cleaned_data.get('registration_deadline')
 
         if date_value and registration_deadline_value and date_value <= registration_deadline_value:
             raise ValidationError('The tournament date must be later than the registration deadline.')
 
-        return date_value
+        return cleaned_data
 
 
 class TournamentForm(BaseTournamentForm):

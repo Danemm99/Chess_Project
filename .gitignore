@@ -177,3 +177,5 @@ cython_debug/
 .idea/
 chess_project/
 *pytest_cache/
+chess_tournament/media/images_tournaments/*
+chess_tournament/media/images_users/*
