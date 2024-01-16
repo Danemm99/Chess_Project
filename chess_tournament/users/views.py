@@ -1,4 +1,4 @@
-from .forms import RegistrationForm, LoginForm
+from .forms import RegistrationForm, LoginForm, HomeEditForm
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect, get_object_or_404
@@ -16,10 +16,13 @@ class RegisterView(View):
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
-        form = RegistrationForm(request.POST)
+        form = RegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('login')
+            email = form.cleaned_data['email']
+            user = CustomUser.get_by_email(email)
+            login(request, user)
+            return redirect('home')
         return render(request, self.template_name, {'form': form})
 
 
@@ -27,6 +30,7 @@ class LoginView(View):
     template_name = 'login/login.html'
 
     def get(self, request):
+
         if request.user.is_authenticated:
             return redirect('home')
         form = LoginForm()
@@ -62,11 +66,31 @@ class HomeView(View):
     template_name = 'user/user.html'
 
     def get(self, request):
+        if not request.user.is_coach and not request.user.is_participant:
+            raise PermissionDenied
+
         user = request.user
         context = {'user': user, 'permission_create_tournament': user.groups.filter(name='Coaches').exists(),
                    'permission_add_location': user.groups.filter(name='Coaches').exists()}
 
         return render(request, self.template_name, context)
+
+
+class HomeEditView(View):
+    template_name = 'user_edit/user_edit.html'
+
+    def get(self, request):
+        user = get_object_or_404(CustomUser, user_id=request.user.user_id)
+        form = HomeEditForm(instance=user)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        user = get_object_or_404(CustomUser, user_id=request.user.user_id)
+        form = HomeEditForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+        return render(request, self.template_name, {'form': form})
 
 
 class MainView(View):
@@ -96,7 +120,8 @@ class ChessPlayerView(View):
         current_user = CustomUser.objects.filter(user_id=request.user.user_id).first()
         context = {
             'chess_player': chess_player,
-            'can_unfollow': Subscription.objects.filter(follower_id=current_user.user_id, target_user_id=chess_player.user_id).first()
+            'can_unfollow': Subscription.objects.filter(follower_id=current_user.user_id,
+                                                        target_user_id=chess_player.user_id).first()
         }
 
         return render(request, self.template_name, context)

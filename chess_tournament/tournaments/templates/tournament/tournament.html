@@ -53,6 +53,12 @@
             max-width: 600px;
             margin: 0 auto;
         }
+        .image {
+            max-width: 100%;
+            max-height: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -60,6 +66,9 @@
         <h2>Information about tournament</h2>
         {% if error %}
             <p class="error-message">{{ error }}</p>
+        {% endif %}
+        {% if tournament.tournament_image %}
+            <p><img class='image' src="{{ tournament.tournament_image.url }}"></p>
         {% endif %}
         <p>Prizes: {{ tournament.prizes }}</p>
         <p>Date: {{ tournament.date }}</p>
@@ -85,7 +94,7 @@
             <a href="{% url 'edit-tournament' tournament.tournament_id %}"><button>Edit tournament</button></a>
             <a href="{% url 'delete-tournament' tournament.tournament_id %}"><button>Delete tournament</button></a>
         {% endif %}
-        <a href="{% url 'tournament_comments' tournament.tournament_id %}"><button>Comment</button></a>
+        <a href="{% url 'tournament-comments' tournament.tournament_id %}"><button>Comment</button></a>
     </div>
 </body>
 </html>

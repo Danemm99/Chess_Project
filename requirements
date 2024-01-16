@@ -8,3 +8,4 @@ djangorestframework==3.12.4
 python-dotenv
 pytest
 pytest-django
+Pillow

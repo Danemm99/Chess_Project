@@ -44,6 +44,13 @@
         button:hover {
             background-color: #218838;
         }
+
+        .image {
+            max-width: 100%;
+            max-height: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -52,6 +59,11 @@
         {% if request.user %}
             <p>You have been registered as {{ user.first_name }} {{ user.last_name }}.</p>
             <p>Your role: {{ user.role }}</p>
+            <p>Your email: {{ user.email }}</p>
+            {% if user.profile_image %}
+                <p><img class='image' src="{{ user.profile_image.url }}"></p>
+            {% endif %}
+            <a href="{% url 'edit-profile' %}"><button>Edit profile</button></a>
             {% if permission_add_location%}
                 <a href="{% url 'location-adding' %}"><button>Add a location</button></a>
             {% endif %}
