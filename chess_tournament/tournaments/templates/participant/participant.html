@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Information about chess player</title>
+    <title>Information about participant</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -57,22 +57,22 @@
 </head>
 <body>
     <div class="content">
-        <h2>Information about chess player</h2>
+        <h2>Information about participant</h2>
         {% if error %}
             <p class="error-message">{{ error }}</p>
         {% endif %}
-        {% if chess_player.profile_image %}
-            <p><img class='image' src="{{ chess_player.profile_image.url }}"></p>
+        {% if participant.profile_image %}
+            <p><img class='image' src="{{ participant.profile_image.url }}"></p>
         {% endif %}
-        <p>First Name: {{ chess_player.first_name }}</p>
-        <p>Last Name: {{ chess_player.last_name }}</p>
-        <p>Email: {{ chess_player.email }}</p>
+        <p>First Name: {{ participant.first_name }}</p>
+        <p>Last Name: {{ participant.last_name }}</p>
+        <p>Email: {{ participant.email }}</p>
         {% if can_unfollow %}
-            <a href="{% url 'unfollow' chess_player.user_id %}"><button>Unfollow the chess player</button></a>
+            <a href="{% url 'unfollow-tournament' tournament.tournament_id participant.user_id %}"><button>Unfollow the participant</button></a>
         {% else %}
-            <a href="{% url 'follow' chess_player.user_id %}"><button>Follow the chess player</button></a>
+            <a href="{% url 'follow-tournament' tournament.tournament_id participant.user_id %}"><button>Follow the participant</button></a>
         {% endif %}
-        <a href="{% url 'chess-players' %}"><button>Back</button></a>
+        <a href="{% url 'participants-tournament' tournament.tournament_id %}"><button>Back</button></a>
     </div>
 </body>
 </html>

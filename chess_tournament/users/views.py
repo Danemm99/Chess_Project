@@ -6,6 +6,7 @@ from django.views import View
 from users.models import CustomUser, Subscription
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
+from tournaments.views import SubscriptionMixin
 
 
 class RegisterView(View):
@@ -106,14 +107,23 @@ class ChessPlayersView(View):
     def get(self, request):
         chess_players = CustomUser.objects.filter(Q(role='participant') | Q(role='coach'),
                                                   ~Q(username=request.user.username))
-        return render(request, self.template_name, {'chess_players': chess_players})
+        res = []
+
+        for chess_player in chess_players:
+            res.append(tuple([chess_player,
+                              Subscription.objects.filter(target_user_id=chess_player.user_id).count(),
+                              Subscription.objects.filter(follower_id=chess_player.user_id).count()]))
+
+        return render(request, self.template_name, {
+            'res': res,
+        })
 
 
 class ChessPlayerView(View):
     template_name = 'chess_player/chess_player.html'
 
     def get(self, request, user_id):
-        if request.user.user_id == user_id:
+        if request.user.user_id == user_id or CustomUser.objects.filter(user_id=user_id).first().role == 'superuser':
             raise PermissionDenied
 
         chess_player = CustomUser.objects.filter(user_id=user_id).first()
@@ -127,12 +137,18 @@ class ChessPlayerView(View):
         return render(request, self.template_name, context)
 
 
-class ChessPlayerFollowView(View):
+class ChessPlayerFollowView(View, SubscriptionMixin):
     template_name = 'follow/follow.html'
 
     def get(self, request, user_id):
+        if request.user.user_id == user_id or CustomUser.objects.filter(user_id=user_id).first().role == 'superuser':
+            raise PermissionDenied
+
+        if self.check_subscription(request, user_id):
+            raise PermissionDenied
 
         chess_player = get_object_or_404(CustomUser, user_id=user_id)
+
         return render(request, self.template_name, {'chess_player': chess_player})
 
     def post(self, request, user_id):
@@ -140,15 +156,21 @@ class ChessPlayerFollowView(View):
         current_user = CustomUser.objects.filter(user_id=request.user.user_id).first()
         Subscription.objects.create(follower_id=current_user.user_id, target_user_id=chess_player.user_id)
 
-        return redirect('chess-players')
+        return redirect('chess-player', user_id)
 
 
-class ChessPlayerUnfollowView(View):
+class ChessPlayerUnfollowView(View, SubscriptionMixin):
     template_name = 'unfollow/unfollow.html'
 
     def get(self, request, user_id):
+        if request.user.user_id == user_id or CustomUser.objects.filter(user_id=user_id).first().role == 'superuser':
+            raise PermissionDenied
+
+        if not self.check_subscription(request, user_id):
+            raise PermissionDenied
 
         chess_player = get_object_or_404(CustomUser, user_id=user_id)
+
         return render(request, self.template_name, {'chess_player': chess_player})
 
     def post(self, request, user_id):
@@ -156,4 +178,5 @@ class ChessPlayerUnfollowView(View):
         current_user = CustomUser.objects.filter(user_id=request.user.user_id).first()
         subscription = Subscription.objects.filter(follower_id=current_user.user_id, target_user_id=chess_player.user_id)
         subscription.delete()
-        return redirect('chess-players')
+
+        return redirect('chess-player', user_id)
