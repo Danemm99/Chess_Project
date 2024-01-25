@@ -20,6 +20,9 @@ class LocationForm(forms.ModelForm):
         city = cleaned_data.get('city')
         address = cleaned_data.get('address')
 
+        if name is None and city is None and address is None:
+            raise ValidationError('All fields are required.')
+
         if Location.objects.filter(name=name, city=city, address=address).exists():
             raise ValidationError('This location already exists.')
 

@@ -3,7 +3,7 @@ from django.views import View
 from .forms import TournamentForm, TournamentEditForm, CommentForm
 from .models import Tournament, Participant, Comment
 from locations.models import Location
-from users.models import CustomUser
+from users.models import CustomUser, Subscription
 from datetime import datetime
 from django.core.exceptions import PermissionDenied
 from locations.views import PermissionMixin
@@ -16,6 +16,39 @@ class PermissionTournamentMixin:
         organizer_user = CustomUser.objects.get(user_id=tournament.organizer_id)
 
         if not request.user.user_id == organizer_user.user_id:
+            raise PermissionDenied
+
+
+class SubscriptionMixin:
+    @staticmethod
+    def check_subscription(request, user_id):
+        if Subscription.objects.filter(follower_id=request.user.user_id, target_user_id=user_id).exists():
+            return True
+
+
+class ParticipantsCheckMixin:
+    @staticmethod
+    def participants_check(tournament_id, participant_id):
+        participated = False
+        participants = Participant.objects.filter(tournament_id=tournament_id)
+        for el in participants:
+            if el.user_id == participant_id:
+                participated = True
+
+        if CustomUser.objects.filter(user_id=participant_id).first().role != 'participant' or not participated:
+            raise PermissionDenied
+
+
+class CommentatorsCheckMixin:
+    @staticmethod
+    def commentators_check(tournament_id, commentator_id):
+        commentator = False
+        commentators = Comment.objects.filter(tournament_id=tournament_id)
+        for el in commentators:
+            if el.user_id == commentator_id:
+                commentator = True
+
+        if not commentator:
             raise PermissionDenied
 
 
@@ -45,7 +78,20 @@ class TournamentsView(View):
 
     def get(self, request):
         tournaments = Tournament.objects.all()
-        return render(request, self.template_name, {'tournaments': tournaments})
+        participants = []
+        res = []
+
+        for tournament in tournaments:
+            participants.append(Participant.objects.filter(tournament_id=tournament.tournament_id).count())
+
+        for i in range(len(tournaments)):
+            res.append(tuple([participants[i], tournaments[i]]))
+
+        return render(request, self.template_name, {
+            'tournaments': tournaments,
+            'participants': participants,
+            'res': res
+        })
 
 
 class TournamentView(View):
@@ -55,6 +101,9 @@ class TournamentView(View):
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
         location = get_object_or_404(Location, location_id=tournament.location_id)
         organizer_user = CustomUser.objects.get(user_id=tournament.organizer_id)
+        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        comments = Comment.objects.filter(tournament=tournament, parent_comment=None)
+        form = CommentForm()
         user = request.user
         today = datetime.now().date()
 
@@ -65,10 +114,29 @@ class TournamentView(View):
             'edit_delete_permission': user.is_authenticated and user.user_id == organizer_user.user_id,
             'time_over': tournament.registration_deadline < today,
             'can_read_participants': user.groups.filter(name='Coaches').exists(),
-            'can_participate': user.groups.filter(name='Participants').exists()
+            'can_participate': user.groups.filter(name='Participants').exists(),
+            'comments': comments,
+            'form': form
         }
 
         return render(request, self.template_name, context)
+
+    def post(self, request, tournament_id):
+        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        form = CommentForm(request.POST)
+
+        if form.is_valid():
+            user = request.user
+            content = form.cleaned_data['content']
+            parent_comment_id = form.cleaned_data.get('parent_comment_id')
+
+            parent_comment = None
+            if parent_comment_id:
+                parent_comment = get_object_or_404(Comment, comment_id=parent_comment_id)
+
+            Comment.objects.create(user=user, tournament=tournament, content=content, parent_comment=parent_comment)
+
+        return redirect('tournament', tournament_id)
 
 
 class TournamentEditView(PermissionTournamentMixin, View):
@@ -121,6 +189,8 @@ class TournamentRegisterView(PermissionMixin, View):
 
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
         location = get_object_or_404(Location, location_id=tournament.location_id)
+        comments = Comment.objects.filter(tournament=tournament, parent_comment=None)
+        form = CommentForm()
         user = request.user
         today = datetime.now().date()
 
@@ -132,7 +202,9 @@ class TournamentRegisterView(PermissionMixin, View):
             'error': 'You have been registered.',
             'can_not_register': tournament.registration_deadline < today,
             'can_read_participants': user.groups.filter(name='Coaches').exists(),
-            'can_participate': user.groups.filter(name='Participants').exists()
+            'can_participate': user.groups.filter(name='Participants').exists(),
+            'comments': comments,
+            'form': form
         }
 
         if Participant.objects.filter(user_id=user.user_id, tournament_id=tournament.tournament_id).exists():
@@ -157,48 +229,165 @@ class TournamentParticipantsView(PermissionMixin, View):
     def get(self, request, tournament_id):
         self.check_coach_permission(request)
 
+        queries = []
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        participants_objects = Participant.objects.filter(tournament_id=tournament.tournament_id)
+        participants = []
+        res = []
 
-        users = Participant.objects.filter(tournament_id=tournament.tournament_id)
-        set_participants = []
+        for el in participants_objects:
+            queries.append(CustomUser.objects.filter(user_id=el.user_id))
 
-        for el in users:
-            set_participants.append(CustomUser.objects.filter(user_id=el.user_id))
+        if len(queries) != 0:
+            participants = queries[0]
+            for query in queries[1:]:
+                participants = participants.union(query)
 
-        return render(request, self.template_name, {'set_participants': set_participants})
-
-
-class TournamentCommentsView(View):
-    template_name = 'comments/tournament_comments.html'
-
-    def get(self, request, tournament_id):
-        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
-        comments = Comment.objects.filter(tournament=tournament, parent_comment=None)
-        form = CommentForm()
+        for participant in participants:
+            res.append(tuple([participant,
+                              Subscription.objects.filter(target_user_id=participant.user_id).count(),
+                              Subscription.objects.filter(follower_id=participant.user_id).count()]))
 
         return render(request, self.template_name, {
-            'user': request.user,
             'tournament': tournament,
-            'comments': comments,
-            'form': form
+            'res': res
         })
 
-    def post(self, request, tournament_id):
+
+class TournamentParticipantView(PermissionMixin, View, ParticipantsCheckMixin):
+    template_name = 'participant/participant.html'
+
+    def get(self, request, tournament_id, participant_id):
+        self.participants_check(tournament_id, participant_id)
+
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
-        form = CommentForm(request.POST)
+        participant = CustomUser.objects.filter(user_id=participant_id).first()
+        current_user = CustomUser.objects.filter(user_id=request.user.user_id).first()
+        context = {
+            'participant': participant,
+            'can_unfollow': Subscription.objects.filter(follower_id=current_user.user_id,
+                                                        target_user_id=participant.user_id).first(),
+            'tournament': tournament
+        }
 
-        if form.is_valid():
-            user = request.user
-            content = form.cleaned_data['content']
-            parent_comment_id = form.cleaned_data.get('parent_comment_id')
+        return render(request, self.template_name, context)
 
-            parent_comment = None
-            if parent_comment_id:
-                parent_comment = get_object_or_404(Comment, comment_id=parent_comment_id)
 
-            Comment.objects.create(user=user, tournament=tournament, content=content, parent_comment=parent_comment)
+class ParticipantFollowView(View, ParticipantsCheckMixin, SubscriptionMixin):
+    template_name = 'follow_tournament/follow_tournament.html'
 
-        return redirect('tournament-comments', tournament_id)
+    def get(self, request, tournament_id, participant_id):
+        self.participants_check(tournament_id, participant_id)
+
+        if self.check_subscription(request, participant_id):
+            raise PermissionDenied
+
+        participant = get_object_or_404(CustomUser, user_id=participant_id)
+        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+
+        return render(request, self.template_name, {'participant': participant, 'tournament': tournament})
+
+    def post(self, request, tournament_id, participant_id):
+        participant = CustomUser.objects.filter(user_id=participant_id).first()
+        current_user = CustomUser.objects.filter(user_id=request.user.user_id).first()
+        Subscription.objects.create(follower_id=current_user.user_id, target_user_id=participant.user_id)
+
+        return redirect('participant-tournament', tournament_id, participant_id)
+
+
+class ParticipantUnfollowView(View, ParticipantsCheckMixin, SubscriptionMixin):
+    template_name = 'unfollow_tournament/unfollow_tournament.html'
+
+    def get(self, request, tournament_id, participant_id):
+        self.participants_check(tournament_id, participant_id)
+
+        if not self.check_subscription(request, participant_id):
+            raise PermissionDenied
+
+        participant = get_object_or_404(CustomUser, user_id=participant_id)
+        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        return render(request, self.template_name, {'participant': participant, 'tournament': tournament})
+
+    def post(self, request, tournament_id, participant_id):
+        participant = CustomUser.objects.filter(user_id=participant_id).first()
+        current_user = CustomUser.objects.filter(user_id=request.user.user_id).first()
+        subscription = Subscription.objects.filter(follower_id=current_user.user_id,
+                                                   target_user_id=participant.user_id)
+        subscription.delete()
+
+        return redirect('participant-tournament', tournament_id, participant_id)
+
+
+class CommentatorView(View, CommentatorsCheckMixin):
+    template_name = 'comments/commentator.html'
+
+    def get(self, request, tournament_id, commentator_id):
+        if request.user.user_id == commentator_id:
+            return redirect('home')
+
+        self.commentators_check(tournament_id, commentator_id)
+
+        commentator = CustomUser.objects.filter(user_id=commentator_id).first()
+        current_user = CustomUser.objects.filter(user_id=request.user.user_id).first()
+        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        context = {
+            'tournament': tournament,
+            'commentator': commentator,
+            'can_unfollow': Subscription.objects.filter(follower_id=current_user.user_id,
+                                                        target_user_id=commentator.user_id).first()
+        }
+
+        return render(request, self.template_name, context)
+
+
+class CommentFollowView(View, CommentatorsCheckMixin, SubscriptionMixin):
+    template_name = 'comments/comment_follow_tournament.html'
+
+    def get(self, request, tournament_id, commentator_id):
+        if request.user.user_id == commentator_id:
+            raise PermissionDenied
+
+        self.commentators_check(tournament_id, commentator_id)
+
+        if self.check_subscription(request, commentator_id):
+            raise PermissionDenied
+
+        commentator = get_object_or_404(CustomUser, user_id=commentator_id)
+        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        return render(request, self.template_name, {'commentator': commentator, 'tournament': tournament})
+
+    def post(self, request, tournament_id, commentator_id):
+        commentator = CustomUser.objects.filter(user_id=commentator_id).first()
+        current_user = CustomUser.objects.filter(user_id=request.user.user_id).first()
+        Subscription.objects.create(follower_id=current_user.user_id, target_user_id=commentator.user_id)
+
+        return redirect('commentator-tournament', tournament_id, commentator_id)
+
+
+class CommentUnfollowView(View, CommentatorsCheckMixin, SubscriptionMixin):
+    template_name = 'comments/comment_unfollow_tournament.html'
+
+    def get(self, request, tournament_id, commentator_id):
+        if request.user.user_id == commentator_id:
+            raise PermissionDenied
+
+        self.commentators_check(tournament_id, commentator_id)
+
+        if not self.check_subscription(request, commentator_id):
+            raise PermissionDenied
+
+        commentator = get_object_or_404(CustomUser, user_id=commentator_id)
+        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        return render(request, self.template_name, {'commentator': commentator, 'tournament': tournament})
+
+    def post(self, request, tournament_id, commentator_id):
+        commentator = CustomUser.objects.filter(user_id=commentator_id).first()
+        current_user = CustomUser.objects.filter(user_id=request.user.user_id).first()
+        subscription = Subscription.objects.filter(follower_id=current_user.user_id,
+                                                   target_user_id=commentator.user_id)
+        subscription.delete()
+
+        return redirect('commentator-tournament', tournament_id, commentator_id)
 
 
 class ReplyCommentView(View):
@@ -228,5 +417,5 @@ class ReplyCommentView(View):
 
             Comment.objects.create(user=user, tournament=tournament, content=content, parent_comment=parent_comment)
 
-        return redirect('tournament-comments', tournament_id)
+        return redirect('tournament', tournament_id)
 
