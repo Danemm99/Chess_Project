@@ -5,7 +5,7 @@ This web application is an user-friendly solution for chess enthusiasts. It offe
 ## Install requirement project's packages
 
 ```commandline
-pip install -r requirements.txt
+pip install -r requirements
 ```
 
 ## Create file .env
